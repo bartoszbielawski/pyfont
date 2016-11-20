@@ -13,20 +13,18 @@ fileTemplate = Template(
 
 namespace ${fontName}
 {
-
-    const uint8_t chars = $chars;
     const uint8_t data[] = {$rawData};
     const uint16_t offsets[] = {$offsets};
     const uint8_t sizes[] = {$sizes};
 
-    PyFont font(chars, data, offsets, sizes);
+    const PyFont font($chars, $baseChar, data, offsets, sizes);
 }
 
 #endif //${fontName}_H
 """
 )
 
-def makeFont(pngFilename, fontName, eraseSpace = None):
+def makeFont(pngFilename, fontName, baseChar, eraseSpace = None):
 
     with Image.open(pngFilename) as image:
         height = image.size[1]
@@ -69,7 +67,8 @@ def makeFont(pngFilename, fontName, eraseSpace = None):
                                 rawData = ", ".join(map(hex, rawData)),
                                 sizes = ", ".join(map(hex, charSizes)),
                                 offsets = ", ".join(map(hex, charOffsets)),
-                                chars = len(charSizes))
+                                chars = len(charSizes),
+                                baseChar = baseChar)
 
         print(fileContents)
 
@@ -77,4 +76,4 @@ def makeFont(pngFilename, fontName, eraseSpace = None):
             f.write(fileContents)
 
 if __name__ == "__main__":
-    makeFont("font.png", "myTestFont", 0)
+    makeFont("font.png", "myTestFont", 32, 0)

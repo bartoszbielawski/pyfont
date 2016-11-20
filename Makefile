@@ -1,9 +1,9 @@
-CXXFLAGS=-std=c++11
+CXXFLAGS=-std=c++11 -O2
 
 
 all:
 		python pyfont.py
-		$(CXX) $(CXXFLAGS) main.cpp -o font
+		$(CXX) $(CXXFLAGS) pyfont.cpp main.cpp -o font
 
 clean:
 		rm font

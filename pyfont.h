@@ -4,13 +4,14 @@
 #include <cstdint>
 #include <utility>
 #include <cassert>
-
+#include <vector>
 
 struct PyFont
 {
-    PyFont(uint8_t chars, const uint8_t* data, const uint16_t* offsets, const uint8_t* sizes):
-        chars(chars), data(data), offsets(offsets), sizes(sizes) {}
+    PyFont(uint8_t chars, uint8_t baseChar, const uint8_t* data, const uint16_t* offsets, const uint8_t* sizes):
+        chars(chars), baseChar(baseChar), data(data), offsets(offsets), sizes(sizes) {}
     uint8_t chars;
+    uint8_t baseChar;
     const uint8_t* data;
     const uint16_t* offsets;
     const uint8_t* sizes;
@@ -29,16 +30,7 @@ struct PyFont
 };
 
 
-uint32_t calculateStringLen(const PyFont& f,uint8_t baseChar, const char* str, uint8_t interCharSpace)
-{
-    uint32_t totalLen = 0;
-    while (char c = *str++)
-    {
-        totalLen +=  f.getCharSize(c - baseChar);
-        totalLen += interCharSpace;
-    }
-    return totalLen;
-}
-
+uint32_t             calculateStringLen(const PyFont& f, const char* str, uint8_t interCharSpace = 1);
+std::vector<uint8_t>       renderString(const PyFont& f, const char* str, uint8_t interCharSpace = 1);
 
 #endif //PYFONT_H
