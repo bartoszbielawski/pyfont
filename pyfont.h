@@ -1,10 +1,7 @@
 #ifndef PYFONT_H
 #define PYFONT_H
 
-#include <cstdint>
-#include <utility>
-#include <cassert>
-#include <vector>
+#include <stdint.h>
 
 struct PyFont
 {
@@ -18,19 +15,17 @@ struct PyFont
 
     uint8_t getCharSize(char ch) const
     {
-        assert(ch < chars);
-        return sizes[ch];
+        return sizes[ch-baseChar];
     }
 
-    std::pair<const uint8_t*, uint8_t> getChar(uint8_t ch) const
+    const uint8_t* getCharData(char ch) const
     {
-        assert(ch < chars);
-        return std::make_pair(data + offsets[ch], sizes[ch]);
+      return data + offsets[ch-baseChar];
     }
 };
 
 
-uint32_t             calculateStringLen(const PyFont& f, const char* str, uint8_t interCharSpace = 1);
-std::vector<uint8_t>       renderString(const PyFont& f, const char* str, uint8_t interCharSpace = 1);
+int  renderString(const PyFont& f, const char* str, uint8_t interCharSpace, uint8_t* output, int size);
 
 #endif //PYFONT_H
+
