@@ -3,33 +3,44 @@
 #include <iostream>
 #include <cstdlib>
 #include <unistd.h>
-
-#include "display.h"
+#include "fakelcdcontrol.h"
 
 using namespace std;
 
 int main(int argc, char* argv[])
 {
-    if (argc < 2)
+
+  if (argc < 2)
      return 0;
 
-    uint32_t len = calculateStringLen(myTestFont::font, argv[1]);
+  char* message = argv[1];
 
-    char* c = argv[1];
+  array<uint8_t, 4096> buffer;
+  buffer.fill(0);
 
+  int len = renderString(myTestFont::font, message, 1, buffer.data(), buffer.size());
 
-    auto v = renderString(myTestFont::font, c);
+  //prepare the "display"
+  //             elems, len
+  FakeLcdControl<32, 8> lcdControl;
 
-    for (auto& s: v)
-    {
-      for (int  i = 0; i < 8; i++)
-      {
-        printf("%c", s & 0x80 ? '#': ' ');
-        s <<= 1;
-      }
-      printf("\n");
-    }
+  //clear all the displays and enable them
+  for (int i = 0; i < lcdControl.getDeviceCount(); ++i)
+  {
+    lcdControl.shutdown(i, false);
+    lcdControl.clearDisplay(i);
+  }
 
+  //for each column of the display copy the rendered text into it
+  uint32_t totalColumns = lcdControl.getDeviceCount() * 8;
 
-    return 0;
+  for (int  i = 0; i < totalColumns; ++i)
+  {
+    lcdControl.setColumn(i / 8, i % 8, buffer[i]);
+  }
+
+  //put the data on stdout
+  lcdControl.print();
+
+  return 0;
 }

@@ -6,8 +6,6 @@ int  renderString(const PyFont& f, const char* str, uint8_t interCharSpace, uint
   
   while (char c = *str++)
   {
-    c -= f.baseChar;
-
     const uint8_t* ptr = f.getCharData(c);
     uint8_t         cs = f.getCharSize(c);
     
@@ -18,9 +16,8 @@ int  renderString(const PyFont& f, const char* str, uint8_t interCharSpace, uint
     }
 
     
-    *output++ = 0;    //interspace 1
+    *output++ = 0;    //interspace 1, ignores the parameter so far
     outputSize++;
-    break;
   }
 
  
