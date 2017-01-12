@@ -9,17 +9,17 @@
 
 
 //This class pretends to be the LcdControl class available on Arduino.
-//Some methods haven't been implemented 
+//Some methods haven't been implemented
 template <uint32_t displays, uint32_t displayLen = 8>
-class FakeLcdControl
+class FakeLedControl
 {
     public:
-        FakeLcdControl() 
+        FakeLedControl() 
         {
             columns.fill(0);
         }
 
-        void shutdown(uint32_t addr, bool disabled) 
+        void shutdown(uint32_t addr, bool disabled)
         {
             assert(addr < displays);
             displayEnabled[addr] = !disabled;
@@ -88,7 +88,7 @@ class FakeLcdControl
 
         void print()
         {
-           
+
             for (uint8_t mask = 0x01; mask > 0; mask <<= 1)
             {
                 for (int col = 0; col < displays * displayLen; ++col)

@@ -1,8 +1,10 @@
 
-
 from PIL import Image
 from operator import or_
 from string import Template
+from itertools import islice
+
+import argparse
 
 fileTemplate = Template(
 """
@@ -13,9 +15,18 @@ fileTemplate = Template(
 
 namespace ${fontName}
 {
-    const uint8_t data[] = {$rawData};
-    const uint16_t offsets[] = {$offsets};
-    const uint8_t sizes[] = {$sizes};
+    const uint8_t data[] =
+    {
+$rawData
+    };
+    const uint16_t offsets[] =
+    {
+$offsets
+    };
+    const uint8_t sizes[] =
+    {
+$sizes
+    };
 
     const PyFont font($chars, $baseChar, data, offsets, sizes);
 }
@@ -23,6 +34,25 @@ namespace ${fontName}
 #endif //${fontName}_H
 """
 )
+
+def twoDigitHex(i):
+    return "0x{:02X}".format(i)
+
+def threeDigitHex(i):
+    return "0x{:03X}".format(i)
+
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
+def formatHexData(data, elementsPerRow = 16, conv=twoDigitHex):
+    rows = []
+    for row in chunks(data, 16):
+        rows.append("\t\t\t"+ ", ".join(map(conv, row)))
+
+    return ",\n".join(rows)
+
 
 def makeFont(pngFilename, fontName, baseChar, eraseSpace = None):
 
@@ -54,7 +84,7 @@ def makeFont(pngFilename, fontName, baseChar, eraseSpace = None):
             charOffsets.append(len(rawData))              #offset in the raw table
             rawData.extend(currentCharData)               #append to raw data and clear
 
-            print("{} - size: {} offset: {}".format(len(charSizes), charSizes[-1], charOffsets[-1]))
+            #print("{} - size: {} offset: {}".format(len(charSizes), charSizes[-1], charOffsets[-1]))
             currentCharData = []
 
         if not eraseSpace is None:
@@ -63,17 +93,27 @@ def makeFont(pngFilename, fontName, baseChar, eraseSpace = None):
             for i in range(start, stop):
                 rawData[i] = 0;
 
+        totalSize = len(charSizes) + len(charOffsets)*2 + len(rawData)
+
+        print("Detected {} characters\nRaw data lenght: {}\nTotal data size: {}".format(len(charSizes), len(rawData), totalSize))
+
         fileContents = fileTemplate.substitute(fontName = fontName,
-                                rawData = ", ".join(map(hex, rawData)),
-                                sizes = ", ".join(map(hex, charSizes)),
-                                offsets = ", ".join(map(hex, charOffsets)),
+                                rawData = formatHexData(rawData, 16),
+                                sizes = formatHexData(charSizes, 16),
+                                offsets = formatHexData(charOffsets, 16, conv=threeDigitHex),
                                 chars = len(charSizes),
                                 baseChar = baseChar)
-
-        print(fileContents)
 
         with open(fontName+".h", "w+") as f:
             f.write(fileContents)
 
 if __name__ == "__main__":
-    makeFont("font.png", "myTestFont", 32, 0)
+    parser = argparse.ArgumentParser(description="A tool to convert fonts in PNG files into fonts");
+    parser.add_argument("pngFile", type=file)
+    parser.add_argument("fontName")
+    parser.add_argument("--firstChar", type=int, default=32)
+    parser.add_argument("--clearSpace", type=int, default=0)
+
+    args = parser.parse_args()
+
+    makeFont(args.pngFile, args.fontName, args.firstChar, args.clearSpace)

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <unistd.h>
-#include "fakelcdcontrol.h"
+#include "FakeLedControl.h"
 
 using namespace std;
 
@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 
   //prepare the "display"
   //             elems, len
-  FakeLcdControl<32, 8> lcdControl;
+  FakeLedControl<32, 8> lcdControl;
 
   //clear all the displays and enable them
   for (int i = 0; i < lcdControl.getDeviceCount(); ++i)
