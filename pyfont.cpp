@@ -1,27 +1,27 @@
 #include "pyfont.h"
 
-int  renderString(const PyFont& f, const char* str, uint8_t interCharSpace, uint8_t* output, int size)
+int renderText(const PyFont& f, const char* text, uint8_t* output, int maxSize)
 {
-  int outputSize = 0;
-  
-  while (char c = *str++)
+  int outputLen = 0;
+
+  while (char c = *text++)
   {
-    const uint8_t* ptr = f.getCharData(c);
-    uint8_t         cs = f.getCharSize(c);
-    
-    for (int s = 0; s < cs; s++)
+    uint8_t        size = f.getCharSize(c);
+    const uint8_t* ptr  = f.getCharData(c);
+
+    for (uint8_t j = 0; j < size; j++)
     {
-      outputSize++;
-      *output++ = ptr[s];
+      *output++ = ptr[j];
+      outputLen++;
+      if (outputLen >= maxSize)
+        return outputLen;
     }
 
-    
-    *output++ = 0;    //interspace 1, ignores the parameter so far
-    outputSize++;
+    *output++ = 0;
+    outputLen++;
+    if (outputLen >= maxSize)
+      return outputLen;
   }
 
- 
-  return outputSize;
+  return outputLen;
 }
-
-

@@ -25,7 +25,6 @@ struct PyFont
 };
 
 
-int  renderString(const PyFont& f, const char* str, uint8_t interCharSpace, uint8_t* output, int size);
+int renderText(const PyFont& f, const char* text, uint8_t* output, int maxSize);
 
 #endif //PYFONT_H
-

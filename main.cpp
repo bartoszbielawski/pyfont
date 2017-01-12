@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <unistd.h>
 #include "FakeLedControl.h"
+#include "SDD.hpp"
 
 using namespace std;
 
@@ -15,32 +16,15 @@ int main(int argc, char* argv[])
 
   char* message = argv[1];
 
-  array<uint8_t, 4096> buffer;
-  buffer.fill(0);
+  FakeLedControl fakeLedControl(8,8);
 
-  int len = renderString(myTestFont::font, message, 1, buffer.data(), buffer.size());
+  SDD scrollingDisplayDriver(fakeLedControl);
 
-  //prepare the "display"
-  //             elems, len
-  FakeLedControl<32, 8> lcdControl;
+  scrollingDisplayDriver.renderString(message, myTestFont::font);
 
-  //clear all the displays and enable them
-  for (int i = 0; i < lcdControl.getDeviceCount(); ++i)
-  {
-    lcdControl.shutdown(i, false);
-    lcdControl.clearDisplay(i);
-  }
+  bool done = scrollingDisplayDriver.tick();
 
-  //for each column of the display copy the rendered text into it
-  uint32_t totalColumns = lcdControl.getDeviceCount() * 8;
-
-  for (int  i = 0; i < totalColumns; ++i)
-  {
-    lcdControl.setColumn(i / 8, i % 8, buffer[i]);
-  }
-
-  //put the data on stdout
-  lcdControl.print();
-
+  while (!done) done = scrollingDisplayDriver.tick();
+  
   return 0;
 }

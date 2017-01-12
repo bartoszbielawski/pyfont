@@ -10,13 +10,15 @@
 
 //This class pretends to be the LcdControl class available on Arduino.
 //Some methods haven't been implemented
-template <uint32_t displays, uint32_t displayLen = 8>
 class FakeLedControl
 {
     public:
-        FakeLedControl() 
+        FakeLedControl(uint32_t displays, uint32_t displayLen = 8):
+          displays(displays),
+          displayLen(displayLen),
+          displayEnabled(displays, false),
+          columns(displays * displayLen, 0)
         {
-            columns.fill(0);
         }
 
         void shutdown(uint32_t addr, bool disabled)
@@ -103,7 +105,8 @@ class FakeLedControl
         }
 
     private:
-        std::bitset<displays> displayEnabled;
-        std::array<uint8_t, displays * displayLen> columns;
-
+      uint32_t displays;
+      uint32_t displayLen;
+      std::vector<bool> displayEnabled;
+      std::vector<uint8_t> columns;
 };
