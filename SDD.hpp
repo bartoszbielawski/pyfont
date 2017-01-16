@@ -15,14 +15,21 @@ class SDD
         bool tick();
         void renderString(const std::string &message, const PyFont& font);
 
+        void refreshDisplay();
+
     private:
         std::vector<uint8_t> buffer;
         enum class STATE
         {
-            STANDBY,
-            ONGOING
+            START,
+            MIDDLE,
+            END
         };
-        STATE state = STATE::STANDBY;
-        uint8_t messageIndex = 0;
+
+        STATE state = STATE::START;
+        uint16_t messageIndex = 0;
+        uint16_t cycleCounter = 0;
         FakeLedControl &ledControl;
+        std::string message;
+        const PyFont* pf = nullptr;
 };
