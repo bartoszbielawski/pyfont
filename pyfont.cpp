@@ -1,8 +1,8 @@
 #include "pyfont.h"
 
-int calculateRenderedLength(const PyFont& f, const char* text)
+size_t calculateRenderedLength(const PyFont& f, const char* text)
 {
-  int outputLen = 0;
+  size_t outputLen = 0;
 
   while (char c = *text++)
   {

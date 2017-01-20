@@ -27,9 +27,12 @@ class SDD
         };
 
         STATE state = STATE::START;
-        uint16_t messageIndex = 0;
-        uint16_t cycleCounter = 0;
+
         FakeLedControl &ledControl;
-        std::string message;
-        const PyFont* pf = nullptr;
+        const static int columnIncrement = 2;
+        size_t           startColumn = 0;
+
+        const static int endDelay = 5;
+        int              delayCounter = 0;
+        int              physicalDisplayLen;
 };

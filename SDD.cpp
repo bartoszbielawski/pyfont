@@ -6,7 +6,8 @@ using namespace std;
 
 SDD::SDD(FakeLedControl &ledControl):
   ledControl(ledControl),
-  buffer(ledControl.getDeviceCount() * 8)
+  buffer(ledControl.getDeviceCount() * 8),
+  physicalDisplayLen(ledControl.getDeviceCount() * 8)
 {
     for (int i = 0; i < ledControl.getDeviceCount(); ++i)
     {
@@ -17,62 +18,51 @@ SDD::SDD(FakeLedControl &ledControl):
 
 bool SDD::tick()
 {
-    int physicalDisplayLen = 8 * ledControl.getDeviceCount();
-
-    switch (state)
-    {
-      case STATE::START:
-        cycleCounter++;
-        if (cycleCounter >= 5)
-        {
-          state = STATE::MIDDLE;
-          cycleCounter = 5;
-        }
-        ledControl.print();
-        return false;
-      
-      case STATE::MIDDLE:
+   switch (state)
+   {
+     case STATE::START:
+      if (!--delayCounter)
       {
-        //zero the array
-        for (auto& e: buffer)
-          e = 0;
-
-        messageIndex++;
-        int len = ::renderText(*pf, message.c_str() + messageIndex, buffer.data(), physicalDisplayLen);
-
-        if (len < physicalDisplayLen)
-        {
-          state = STATE::END;
-          cycleCounter = 0;
-        }
-
-        refreshDisplay();
+        state = STATE::MIDDLE;
       }
       return false;
+    
+     case STATE::MIDDLE:
+     {
+      startColumn += columnIncrement;
+      refreshDisplay();
 
-      case STATE::END:
-        cycleCounter++;
-        if (cycleCounter == 5)
+      bool done = (buffer.size() - startColumn) < physicalDisplayLen;
+      if (done)
+      {
+        state = STATE::END;
+        delayCounter = endDelay;
+      }
+      return false;
+     }
+
+     case STATE::END:
+        delayCounter--;
+        if (delayCounter == 0)
         {
           state = STATE::START;
-          cycleCounter = 0;
+          delayCounter = endDelay;
+          startColumn = 0;
           return true;
         }
-        ledControl.print();
-        break;
+       return false;
+   }
 
-    }
-
-    return false;
+   return true;
 }
 
 void SDD::refreshDisplay()
 {
   int physicalDisplayLen = 8 * ledControl.getDeviceCount();
-
+  
   for (int  i = 0; i < physicalDisplayLen; ++i)
   {
-    ledControl.setColumn(i / 8, i % 8, buffer[i]);
+    ledControl.setColumn(i / 8, i % 8, buffer[i+startColumn]);
   }
 
   ledControl.print();
@@ -80,15 +70,31 @@ void SDD::refreshDisplay()
 
 void SDD::renderString(const std::string &message, const PyFont& font)
 {
-  this->message = message;
-  messageIndex = 0;
-  pf = &font;
-  cycleCounter = 0;
+  int physicalDisplayLen = 8 * ledControl.getDeviceCount();
+  size_t len = calculateRenderedLength(font, message.c_str());
+  startColumn = 0;
+
+  //here we make difference between a text that fits in the display and a text
+  //that has to be scrolled
+  if (len <= physicalDisplayLen)
+  {
+    buffer.resize(len, 0);                              //resize and zero
+    int margin = (physicalDisplayLen - len + 1) / 2;    //calculate margin with rounding
+    renderText(font, message.c_str(), buffer.data() + margin, len);
+
+    state = STATE::END;
+    delayCounter = endDelay;
+
+    refreshDisplay();
+    return;
+  }
+
+  //just change the size, the values will be initialized anyway when rendering
+  buffer.resize(len); 
+  renderText(font, message.c_str(), buffer.data(), len);
+
   state = STATE::START;
-
-  int physicalDisplayLen = 8 * ledControl.getDeviceCount(); 
-  int len = ::renderText(*pf, message.c_str() + messageIndex, buffer.data(), physicalDisplayLen);
-
+  delayCounter = endDelay;
+  
   refreshDisplay();
-
 }

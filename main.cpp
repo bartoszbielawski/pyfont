@@ -20,13 +20,10 @@ int main(int argc, char* argv[])
 
   SDD scrollingDisplayDriver(fakeLedControl);
 
-  cout << "The full length: " << calculateRenderedLength(myTestFont::font, message) << endl;
-
   scrollingDisplayDriver.renderString(message, myTestFont::font);
 
-  bool done = scrollingDisplayDriver.tick();
-
-  while (!done) done = scrollingDisplayDriver.tick();
+  while (!scrollingDisplayDriver.tick())
+    usleep(100000);
   
   return 0;
 }
