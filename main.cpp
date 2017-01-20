@@ -20,6 +20,8 @@ int main(int argc, char* argv[])
 
   SDD scrollingDisplayDriver(fakeLedControl);
 
+  cout << "The full length: " << calculateRenderedLength(myTestFont::font, message) << endl;
+
   scrollingDisplayDriver.renderString(message, myTestFont::font);
 
   bool done = scrollingDisplayDriver.tick();

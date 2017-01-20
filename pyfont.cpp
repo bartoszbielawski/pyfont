@@ -1,5 +1,18 @@
 #include "pyfont.h"
 
+int calculateRenderedLength(const PyFont& f, const char* text)
+{
+  int outputLen = 0;
+
+  while (char c = *text++)
+  {
+    outputLen  += f.getCharSize(c) + 1;   //char spacing == 1
+  }
+  //FIXME: we can remove the last spacing at the end
+
+  return outputLen;
+}
+
 int renderText(const PyFont& f, const char* text, uint8_t* output, int maxSize)
 {
   int outputLen = 0;

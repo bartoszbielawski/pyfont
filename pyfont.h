@@ -26,5 +26,6 @@ struct PyFont
 
 
 int renderText(const PyFont& f, const char* text, uint8_t* output, int maxSize);
+int calculateRenderedLength(const PyFont& f, const char* text);
 
 #endif //PYFONT_H
