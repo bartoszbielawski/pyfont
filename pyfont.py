@@ -1,9 +1,10 @@
+#!/usr/bin/env python
 
 from PIL import Image
 from operator import or_
 from string import Template
 from itertools import islice
-
+import logging
 import argparse
 
 fileTemplate = Template(
@@ -55,14 +56,12 @@ def formatHexData(data, elementsPerRow = 16, conv=twoDigitHex):
 
 
 def makeFont(pngFilename, fontName, baseChar, eraseSpace = None):
-
+    logging.info("Opening file %s", pngFilename)
     with Image.open(pngFilename) as image:
         height = image.size[1]
         width = image.size[0]
-        print("Loaded image: {}x{}".format(height, width))
-
+        logging.info("Loaded image: {}x{}".format(height, width))
         assert(height == 8)
-
         rows = range(height)
 
         rawData = []
@@ -78,16 +77,17 @@ def makeFont(pngFilename, fontName, baseChar, eraseSpace = None):
                 continue
 
             if len(currentCharData) == 0:       #discard empty chars
+                logging.debug("Skipping empty character...");
                 continue
-
             charSizes.append(len(currentCharData))        #size of current char
             charOffsets.append(len(rawData))              #offset in the raw table
             rawData.extend(currentCharData)               #append to raw data and clear
 
-            #print("{} - size: {} offset: {}".format(len(charSizes), charSizes[-1], charOffsets[-1]))
+            logging.debug("{} - size: {} offset: {}".format(len(charSizes), charSizes[-1], charOffsets[-1]))
             currentCharData = []
 
         if not eraseSpace is None:
+            logging.info("Erasing empty character at offset %d", eraseSpace)
             start = charOffsets[eraseSpace]
             stop = start+charSizes[eraseSpace]
             for i in range(start, stop):
@@ -95,7 +95,9 @@ def makeFont(pngFilename, fontName, baseChar, eraseSpace = None):
 
         totalSize = len(charSizes) + len(charOffsets)*2 + len(rawData)
 
-        print("Detected {} characters\nRaw data lenght: {}\nTotal data size: {}".format(len(charSizes), len(rawData), totalSize))
+        logging.info("Detected %d characters",len(charSizes))
+        logging.info("Raw data lenght: %d", len(rawData))
+        logging.info("Total data size: %d", totalSize)
 
         fileContents = fileTemplate.substitute(fontName = fontName,
                                 rawData = formatHexData(rawData, 16),
@@ -104,10 +106,12 @@ def makeFont(pngFilename, fontName, baseChar, eraseSpace = None):
                                 chars = len(charSizes),
                                 baseChar = baseChar)
 
+        logging.info("Writing font data into a file: %s", fontName + ".h")
         with open(fontName+".h", "w+") as f:
             f.write(fileContents)
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     parser = argparse.ArgumentParser(description="A tool to convert fonts in PNG files into fonts");
     parser.add_argument("pngFile", type=file)
     parser.add_argument("fontName")
